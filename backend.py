@@ -98,4 +98,10 @@ class SetupDatabase:
 
 
     def _FinishDatabase_(self):
+        ALL_INFO = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails from Notes')
+
+        print('------------------\nPRINTING ALL INFORMATION\n')
+        for i in ALL_INFO:
+            print(i)
+
         self.db.close()
