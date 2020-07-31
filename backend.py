@@ -114,20 +114,43 @@ class SetupDatabase:
                 print(f'"{TITLE}" doesn\'t exist')
             if action.lower() == 'upd':
 
-              TITLE_TO_UPDATE = input('NoteTitle to update: ')
-              if TITLE_TO_UPDATE in self.NoteTitles:
-                NEW_DETAILS = input(f'New NoteDetails for "{TITLE_TO_UPDATE}": ')
-                self.db.execute(f'''
-                UPDATE Notes
-                SET NoteDetails="{NEW_DETAILS}"
-                WHERE NoteTitle="{TITLE_TO_UPDATE}"
-                ''')
-                self.db.commit()
+                TO_UPD = input('\nWhat To Update(NoteTitle, NoteDetail): ')
+                
+                if TO_UPD.lower() == 'notedetail':
+                    TITLE_TO_UPDATE = input('NoteTitle to update: ')
+                    if TITLE_TO_UPDATE in self.NoteTitles:
+                        NEW_DETAILS = input(f'New NoteDetails for "{TITLE_TO_UPDATE}": ')
+                        self.db.execute(f'''
+                        UPDATE Notes
+                        SET NoteDetails="{NEW_DETAILS}"
+                        WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                        ''')
+                        self.db.commit()
 
-                print(f'Successfully updated "{TITLE_TO_UPDATE}"')
-              else:
-                print(f'"{TITLE_TO_UPDATE}" doesn\'t exist')
+                        print(f'Successfully updated "{TITLE_TO_UPDATE}"')
+                    else:
+                        print(f'"{TITLE_TO_UPDATE}" doesn\'t exist')
+                elif TO_UPD.lower() == 'notetitle':
 
+                    TITLE_TO_UPDATE = input('NoteTitle to update: ')
+
+                    if TITLE_TO_UPDATE in self.NoteTitles:
+                        NEW_TITLE_NAME = input(f'New NoteTitle Name For "{TITLE_TO_UPDATE}": ')
+
+                        self.db.execute(f'''
+                        UPDATE Notes
+                        SET NoteTitle="{NEW_TITLE_NAME}"
+                        where NoteTitle="{TITLE_TO_UPDATE}"
+                        ''')
+                        self.db.commit()
+
+                        self.NoteTitles.remove(TITLE_TO_UPDATE)
+                        self.NoteTitles.append(NEW_TITLE_NAME)
+                        UpdateJSON(self.NoteId,self.NoteTitles)
+
+                        print(f'Successfully updated NoteTitle of {TITLE_TO_UPDATE}')
+                    else:
+                        print(f'NoteTitle "{TITLE_TO_UPDATE}" doesn\'t exist')
 
     def _FinishDatabase_(self):
         ALL_INFO = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails from Notes')
