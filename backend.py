@@ -186,7 +186,8 @@ class Database:
                         WHERE NoteTitle="{TITLE_TO_UPDATE}"
                         ''')
 
-                        if LAST_UPDATE_DETAIL != "Updated NoteDetail" and LAST_UPDATE_DETAIL != " ORIGINAL":
+                        if LAST_UPDATE_DETAIL != "Updated NoteDetail":
+                            if LAST_UPDATE_DETAIL == " ORIGINAL": LAST_UPDATE_DETAIL = "."
                             self.db.execute(f'''
                             UPDATE Notes
                             SET UPDATE_DETAILS="Updated NoteDetail{LAST_UPDATE_DETAIL}"
@@ -216,8 +217,8 @@ class Database:
                             LAST_UPDATE_DETAIL = " "+i[0]
                             break
                         
-                        if LAST_UPDATE_DETAIL != "Updated NoteTitle" and LAST_UPDATE_DETAIL != " ORIGINAL":
-                            print("NOPE")
+                        if LAST_UPDATE_DETAIL != "Updated NoteTitle":
+                            if LAST_UPDATE_DETAIL == " ORIGINAL": LAST_UPDATE_DETAIL = "."
                             self.db.execute(f'''
                             UPDATE Notes
                             SET UPDATE_DETAILS="Updated NoteTitle{LAST_UPDATE_DETAIL}"
