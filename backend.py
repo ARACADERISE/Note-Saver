@@ -133,6 +133,8 @@ class Database:
 
                         self.IsUpdated = False
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
+
+                        print(f'\033[1mOLD -> {self.LastOldInfo}\033[0m\tNEW -> {r[2]}')
                     else:
                         print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m\n')
                     print(f'\t{r[2]}')
