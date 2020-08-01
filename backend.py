@@ -141,7 +141,7 @@ class Database:
                         if self.RecentlyUpdateStatus == 'Updated NoteTitle':
                             print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m ({r[4]})\nOLD NoteTitle -> "{self.LastOldInfo}"\n')
                         else:
-                            print(f'\nInformation for Note {r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m ({r[4]})\n')
+                            print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m ({r[4]})\n')
 
                         self.IsUpdated = False
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
