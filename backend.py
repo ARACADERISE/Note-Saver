@@ -129,15 +129,18 @@ class Database:
 
                 for r in info:
                     if r[1] in self.UpdatedTitles:
-                        print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m\n')
+                        if self.RecentlyUpdateStatus == 'Updated NoteTitle':
+                            print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m\nOLD NoteTitle -> "{self.LastOldInfo}"\n')
+                        else:
+                            print(f'\nInformation for Note {r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m\n')
 
                         self.IsUpdated = False
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
 
-                        print(f'\033[1mOLD -> {self.LastOldInfo}\033[0m\tNEW -> {r[2]}')
+                        print(f'\tOLD INFO -> {self.LastOldInfo}\n\tNEW INFO -> {r[2]}')
                     else:
                         print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m\n')
-                    print(f'\t{r[2]}')
+                        print(f'\t{r[2]}')
             if action.lower() == 'clr':
                 os.system('clear')
                 Menu()
@@ -193,6 +196,13 @@ class Database:
 
                         for i in LAST_UPDATE_DETAIL:
                             LAST_UPDATE_DETAIL = " "+str(i[0])
+                            break
+                        
+                        LAST_INFORMATION = self.db.execute('SELECT NoteDetails FROM Notes')
+
+                        for i in LAST_INFORMATION:
+                            self.LastOldInfo = i[0]
+                            break
 
                         self.db.execute(f'''
                         UPDATE Notes
@@ -212,11 +222,6 @@ class Database:
 
                         self.IsUpdated = True
                         self.UpdatedTitles.append(TITLE_TO_UPDATE)
-                        LAST_INFORMATION = self.db.execute('SELECT NoteDetails FROM Notes')
-
-                        for i in LAST_INFORMATION:
-                            self.LastOldInfo = i[0]
-                            break
 
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
 
