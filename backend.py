@@ -23,6 +23,9 @@ def UpdateJSON(number,NoteTitles,IsUpdated,UpdatedTitles):
             sort_keys=False
         ))
 
+def Menu():
+    print('Welcome to Notes! Here you can write a note, then it\'ll automatically save!\n\nKey Commands:\nnew - Create new note\nexit - Leave Application\nShow - Show all notes\ndel - Delete a specific NoteTitle\nupd - Update a specific NoteTitle\nclr - Clear Terminal\n')
+
 def PrintTitles(database):
     titles = database.execute('SELECT NoteTitle FROM Notes')
 
@@ -79,7 +82,7 @@ class Database:
     
     def _StartupNotes_(self):
 
-        print('Welcome to Notes! Here you can write a note, then it\'ll automatically save!\n\nKey Commands:\nnew - Create new note\nexit - Leave Application\nShow - Show all notes\ndel - Delete a specific NoteTitle\nupd - Update a specific NoteTitle\n')
+        Menu()
 
         while self.run:
             action = input('\nAction -> ')
@@ -120,6 +123,9 @@ class Database:
                     else:
                         print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m\n')
                     print(f'\t{r[2]}')
+            if action.lower() == 'clr':
+                os.system('clear')
+                Menu()
             if action.lower() == 'del':
                 PrintTitles(self.db)
 
