@@ -143,7 +143,10 @@ class Database:
                         self.IsUpdated = False
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
 
-                        print(f'\tOLD INFO -> {self.LastOldInfo}\n\tNEW INFO -> {r[2]}')
+                        if self.RecentlyUpdateStatus == 'Updated NoteDetails':
+                            print(f'\tOLD INFO -> {self.LastOldInfo}\n\tNEW INFO -> {r[2]}')
+                        else:
+                            print(f'\t{r[2]}')
                     else:
                         print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m ({r[4]})\n')
                         print(f'\t{r[2]}')
@@ -248,6 +251,12 @@ class Database:
                         NEW_TITLE_NAME = input(f'New NoteTitle Name For "{TITLE_TO_UPDATE}": ')
 
                         LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
+
+                        LAST_INFORMATION = self.db.execute('SELECT NoteTitle FROM Notes')
+
+                        for i in LAST_INFORMATION:
+                            self.LastOldInfo = i[0]
+                            break
 
                         for i in LAST_UPDATE_DETAIL:
                             LAST_UPDATE_DETAIL = " "+i[0]
