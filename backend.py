@@ -212,6 +212,11 @@ class Database:
 
                         self.IsUpdated = True
                         self.UpdatedTitles.append(TITLE_TO_UPDATE)
+                        LAST_INFORMATION = self.db.execute('SELECT NoteDetail FROM Notes')
+
+                        for i in LAST_INFORMATION:
+                            self.LastOldInfo = i[0]
+                            break
 
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
 
@@ -227,11 +232,6 @@ class Database:
                         NEW_TITLE_NAME = input(f'New NoteTitle Name For "{TITLE_TO_UPDATE}": ')
 
                         LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
-                        LAST_INFORMATION = self.db.execute('SELECT NoteDetail FROM Notes')
-
-                        for i in LAST_INFORMATION:
-                            self.LastOldInfo = i[0]
-                            break
 
                         for i in LAST_UPDATE_DETAIL:
                             LAST_UPDATE_DETAIL = " "+i[0]
