@@ -1,5 +1,7 @@
 import sqlite3, json, os
+from datetime import date
 
+# Temporary information to keep everything up to date
 DATA = {'DatabaseCreated':False,'NoteId':1, 'NoteTitles':[],'IsUpdated':False, 'UpdatedTitles':[], 'RecentlyUpdatedStatus':'','LastOldInfo':''}
 
 """
@@ -43,6 +45,7 @@ class Database:
         self.NoteTitle = ''
         self.NoteDetails = ''
         self.run = True
+        self.TodaysDate = date.today()
 
         if not os.path.isfile('info.json'):
             self.HasCreatedTable = False
@@ -73,7 +76,9 @@ class Database:
                     NoteId INT PRIMARY KEY NOT NULL,
                     NoteTitle TEXT NOT NULL,
                     NoteDetails TEXT NOT NULL,
-                    UPDATE_DETAILS TEXT
+                    UPDATE_DETAILS TEXT,
+                    DATE TEXT NOT NULL,
+                    UPDATE_DATE TEXT
                 );
             ''')
 
@@ -110,8 +115,8 @@ class Database:
 
                     if not self.NoteDetails == "":
                         UpdateDatabase(self.db,f'''
-                        INSERT INTO Notes(NoteId,NoteTitle,NoteDetails,UPDATE_DETAILS)
-                        VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}","ORIGINAL")
+                        INSERT INTO Notes(NoteId,NoteTitle,NoteDetails,UPDATE_DETAILS,DATE)
+                        VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}","ORIGINAL","{self.TodaysDate}")
                         ''')
 
                         self.NoteId += 1
@@ -126,21 +131,21 @@ class Database:
                 print("Successfully left project.\n")
             if action.lower() == 'show':
                 #db_connect = sqlite3.connect('db.db')
-                info = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS from Notes')
+                info = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE from Notes')
 
                 for r in info:
                     if r[1] in self.UpdatedTitles:
                         if self.RecentlyUpdateStatus == 'Updated NoteTitle':
-                            print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m\nOLD NoteTitle -> "{self.LastOldInfo}"\n')
+                            print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m ({r[4]})\nOLD NoteTitle -> "{self.LastOldInfo}"\n')
                         else:
-                            print(f'\nInformation for Note {r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m\n')
+                            print(f'\nInformation for Note {r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m ({r[4]})\n')
 
                         self.IsUpdated = False
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
 
                         print(f'\tOLD INFO -> {self.LastOldInfo}\n\tNEW INFO -> {r[2]}')
                     else:
-                        print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m\n')
+                        print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m ({r[4]})\n')
                         print(f'\t{r[2]}')
             if action.lower() == 'clr':
                 os.system('clear')
@@ -219,6 +224,11 @@ class Database:
                             SET UPDATE_DETAILS="Updated NoteDetail{LAST_UPDATE_DETAIL}"
                             WHERE NoteTitle="{TITLE_TO_UPDATE}"
                             ''')
+                            self.db.execute(f'''
+                            UPDATE Notes
+                            SET UPDATE_DATE="Updated On {self.TodaysDate}"
+                            WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                            ''')
                         self.db.commit()
 
                         self.IsUpdated = True
@@ -248,6 +258,12 @@ class Database:
                             self.db.execute(f'''
                             UPDATE Notes
                             SET UPDATE_DETAILS="Updated NoteTitle{LAST_UPDATE_DETAIL}"
+                            SET DATE="{self.TodaysDate}"
+                            WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                            ''')
+                            self.db.execute(f'''
+                            UPDATE Notes
+                            SET UPDATE_DATE="Updated On {self.TodaysDate}"
                             WHERE NoteTitle="{TITLE_TO_UPDATE}"
                             ''')
                             self.RecentlyUpdateStatus = "Updated NoteTitle"
@@ -271,7 +287,7 @@ class Database:
                         print(f'NoteTitle "{TITLE_TO_UPDATE}" doesn\'t exist')
 
     def _FinishDatabase_(self):
-        ALL_INFO = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS from Notes')
+        ALL_INFO = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE, UPDATE_DATE from Notes')
 
         print('------------------\nALL INFORMATION STORED\n')
         for i in ALL_INFO:
