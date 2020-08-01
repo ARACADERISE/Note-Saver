@@ -202,6 +202,9 @@ class Database:
 
                     TITLE_TO_UPDATE = input('NoteTitle to update: ')
 
+                    if TITLE_TO_UPDATE.isdigit():
+                        TITLE_TO_UPDATE = titles[int(TITLE_TO_UPDATE)-1]
+
                     if TITLE_TO_UPDATE in self.NoteTitles:
                         NEW_DETAILS = input(f'New NoteDetails for "{TITLE_TO_UPDATE}": ')
 
