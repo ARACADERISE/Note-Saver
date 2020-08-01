@@ -110,7 +110,7 @@ class Database:
                 ''')
 
                 self.NoteId += 1
-                UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
+                UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus)
             if action.lower() == 'exit':
                 self.run = False
                 print("Successfully left project.\n")
