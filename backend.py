@@ -123,7 +123,8 @@ class Database:
                         self.db.commit()
                         deleted = True
                     else:
-                        print('No NoteTitle(s) to delete.')
+                        if len(self.NoteTitles) < 1:
+                            print('No NoteTitle(s) to delete.')
                     
                     if deleted:
                         # All go back to default
