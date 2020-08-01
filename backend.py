@@ -118,7 +118,7 @@ class Database:
                         self.IsUpdated = False
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
                     else:
-                        print(f'\nInformation for Note "{r[1]}"(#{r[0]})\n')
+                        print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m\n')
                     print(f'\t{r[2]}')
             if action.lower() == 'del':
                 PrintTitles(self.db)
