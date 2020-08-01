@@ -37,7 +37,7 @@ def PrintTitles(database):
 class Database:
 
     def __init__(self):
-        self.db = sqlite3.connect('db.db')
+        self.db = sqlite3.connect('DB.db')
         self.NoteTitle = ''
         self.NoteDetails = ''
         self.run = True
@@ -102,8 +102,8 @@ class Database:
                 self.NoteDetails = input(f'Deatails for Note #{self.NoteId}({self.NoteTitle}): ')
 
                 UpdateDatabase(self.db,f'''
-                INSERT INTO Notes(NoteId,NoteTitle,NoteDetails)
-                VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}")
+                INSERT INTO Notes(NoteId,NoteTitle,NoteDetails,UPDATE_DETAILS)
+                VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}","ORIGINAL")
                 ''')
 
                 self.NoteId += 1
@@ -178,21 +178,20 @@ class Database:
                         LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
 
                         for i in LAST_UPDATE_DETAIL:
-                            LAST_UPDATE_DETAIL = i[0]
-                        
-                        if LAST_UPDATE_DETAIL == "Updated NoteDetail":
-                            LAST_UPDATE_DETAIL = ""
+                            LAST_UPDATE_DETAIL = " "+str(i[0])
 
                         self.db.execute(f'''
                         UPDATE Notes
                         SET NoteDetails="{NEW_DETAILS}"
                         WHERE NoteTitle="{TITLE_TO_UPDATE}"
                         ''')
-                        self.db.execute(f'''
-                        Update Notes
-                        SET UPDATE_DETAILS="Updated NoteDetail{LAST_UPDATE_DETAIL}"
-                        WHERE NoteTitle="{TITLE_TO_UPDATE}"
-                        ''')
+
+                        if LAST_UPDATE_DETAIL != "Updated NoteDetail" and LAST_UPDATE_DETAIL != " ORIGINAL":
+                            self.db.execute(f'''
+                            UPDATE Notes
+                            SET UPDATE_DETAILS="Updated NoteDetail{LAST_UPDATE_DETAIL}"
+                            WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                            ''')
                         self.db.commit()
 
                         self.IsUpdated = True
@@ -211,15 +210,23 @@ class Database:
                     if TITLE_TO_UPDATE in self.NoteTitles:
                         NEW_TITLE_NAME = input(f'New NoteTitle Name For "{TITLE_TO_UPDATE}": ')
 
+                        LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
+
+                        for i in LAST_UPDATE_DETAIL:
+                            LAST_UPDATE_DETAIL = " "+i[0]
+                            break
+                        
+                        if LAST_UPDATE_DETAIL != "Updated NoteTitle" and LAST_UPDATE_DETAIL != " ORIGINAL":
+                            print("NOPE")
+                            self.db.execute(f'''
+                            UPDATE Notes
+                            SET UPDATE_DETAILS="Updated NoteTitle{LAST_UPDATE_DETAIL}"
+                            WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                            ''')
+
                         self.db.execute(f'''
                         UPDATE Notes
                         SET NoteTitle="{NEW_TITLE_NAME}"
-                        WHERE NoteTitle="{TITLE_TO_UPDATE}"
-                        ''')
-                        
-                        self.db.execute(f'''
-                        UPDATE Notes
-                        SET UPDATE_DETAILS="Update NoteTitles"
                         WHERE NoteTitle="{TITLE_TO_UPDATE}"
                         ''')
                         self.db.commit()
