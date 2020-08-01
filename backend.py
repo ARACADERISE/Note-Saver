@@ -197,7 +197,8 @@ class Database:
                 TO_UPD = input('\nWhat To Update(NoteTitle, NoteDetail): ')
                 
                 if TO_UPD.lower() == 'notedetail':
-                    PrintTitles(self.db)
+                    titles=[]
+                    PrintTitles(self.db,titles)
 
                     TITLE_TO_UPDATE = input('NoteTitle to update: ')
 
