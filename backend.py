@@ -258,7 +258,6 @@ class Database:
                             self.db.execute(f'''
                             UPDATE Notes
                             SET UPDATE_DETAILS="Updated NoteTitle{LAST_UPDATE_DETAIL}"
-                            SET DATE="{self.TodaysDate}"
                             WHERE NoteTitle="{TITLE_TO_UPDATE}"
                             ''')
                             self.db.execute(f'''
