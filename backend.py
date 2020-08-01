@@ -212,7 +212,7 @@ class Database:
 
                         self.IsUpdated = True
                         self.UpdatedTitles.append(TITLE_TO_UPDATE)
-                        LAST_INFORMATION = self.db.execute('SELECT NoteDetail FROM Notes')
+                        LAST_INFORMATION = self.db.execute('SELECT NoteDetails FROM Notes')
 
                         for i in LAST_INFORMATION:
                             self.LastOldInfo = i[0]
