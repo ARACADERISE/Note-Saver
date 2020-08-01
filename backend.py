@@ -30,12 +30,15 @@ def UpdateJSON(number,NoteTitles,IsUpdated,UpdatedTitles,UpdStat,LOI):
 def Menu():
     print('Welcome to Notes! Here you can write a note, then it\'ll automatically save!\n\nKey Commands:\nnew - Create new note\nexit - Leave Application\nShow - Show all notes\ndel - Delete a specific NoteTitle\nupd - Update a specific NoteTitle\nclr - Clear Terminal\n')
 
-def PrintTitles(database):
+def PrintTitles(database,titles_):
     titles = database.execute('SELECT NoteTitle FROM Notes')
+    f = 1
 
     print('------------\nTITLES:\n')
     for i in titles:
-        print(i[0],'\t')
+        print(str(f)+') ',i[0],'\t')
+        titles_.append(i[0])
+        f+=1
     print('------------\n')
 
 class Database:
@@ -243,54 +246,61 @@ class Database:
                     else:
                         print(f'"{TITLE_TO_UPDATE}" doesn\'t exist')
                 elif TO_UPD.lower() == 'notetitle':
-                    PrintTitles(self.db)
+                    titles = []
+                    PrintTitles(self.db,titles)
 
                     TITLE_TO_UPDATE = input('NoteTitle to update: ')
+
+                    if TITLE_TO_UPDATE.isdigit():
+                        TITLE_TO_UPDATE = titles[int(TITLE_TO_UPDATE)-1]
 
                     if TITLE_TO_UPDATE in self.NoteTitles:
                         NEW_TITLE_NAME = input(f'New NoteTitle Name For "{TITLE_TO_UPDATE}": ')
 
-                        LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
+                        if not NEW_TITLE_NAME == "":
+                            LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
 
-                        LAST_INFORMATION = self.db.execute('SELECT NoteTitle FROM Notes')
+                            LAST_INFORMATION = self.db.execute('SELECT NoteTitle FROM Notes')
 
-                        for i in LAST_INFORMATION:
-                            self.LastOldInfo = i[0]
-                            break
+                            for i in LAST_INFORMATION:
+                                self.LastOldInfo = i[0]
+                                break
 
-                        for i in LAST_UPDATE_DETAIL:
-                            LAST_UPDATE_DETAIL = " "+i[0]
-                            break
-                        
-                        if LAST_UPDATE_DETAIL != "Updated NoteTitle":
-                            if LAST_UPDATE_DETAIL == " ORIGINAL": LAST_UPDATE_DETAIL = "."
+                            for i in LAST_UPDATE_DETAIL:
+                                LAST_UPDATE_DETAIL = " "+i[0]
+                                break
+                            
+                            if LAST_UPDATE_DETAIL != "Updated NoteTitle":
+                                if LAST_UPDATE_DETAIL == " ORIGINAL": LAST_UPDATE_DETAIL = "."
+                                self.db.execute(f'''
+                                UPDATE Notes
+                                SET UPDATE_DETAILS="Updated NoteTitle{LAST_UPDATE_DETAIL}"
+                                WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                                ''')
+                                self.db.execute(f'''
+                                UPDATE Notes
+                                SET UPDATE_DATE="Updated On {self.TodaysDate}"
+                                WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                                ''')
+                                self.RecentlyUpdateStatus = "Updated NoteTitle"
+
                             self.db.execute(f'''
                             UPDATE Notes
-                            SET UPDATE_DETAILS="Updated NoteTitle{LAST_UPDATE_DETAIL}"
+                            SET NoteTitle="{NEW_TITLE_NAME}"
                             WHERE NoteTitle="{TITLE_TO_UPDATE}"
                             ''')
-                            self.db.execute(f'''
-                            UPDATE Notes
-                            SET UPDATE_DATE="Updated On {self.TodaysDate}"
-                            WHERE NoteTitle="{TITLE_TO_UPDATE}"
-                            ''')
-                            self.RecentlyUpdateStatus = "Updated NoteTitle"
+                            self.db.commit()
 
-                        self.db.execute(f'''
-                        UPDATE Notes
-                        SET NoteTitle="{NEW_TITLE_NAME}"
-                        WHERE NoteTitle="{TITLE_TO_UPDATE}"
-                        ''')
-                        self.db.commit()
+                            self.NoteTitles.remove(TITLE_TO_UPDATE)
+                            self.NoteTitles.append(NEW_TITLE_NAME)
+                            self.IsUpdated = True
+                            self.UpdatedTitles.append(NEW_TITLE_NAME)
 
-                        self.NoteTitles.remove(TITLE_TO_UPDATE)
-                        self.NoteTitles.append(NEW_TITLE_NAME)
-                        self.IsUpdated = True
-                        self.UpdatedTitles.append(NEW_TITLE_NAME)
+                            UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
 
-                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
-
-                        print(f'Successfully updated NoteTitle of {TITLE_TO_UPDATE}')
+                            print(f'Successfully updated NoteTitle of {TITLE_TO_UPDATE}')
+                        else:
+                            print(f'Cannot reassign NoteTitle to "". NoteTitle "{TITLE_TO_UPDATE}" remains the same')
                     else:
                         print(f'NoteTitle "{TITLE_TO_UPDATE}" doesn\'t exist')
 
