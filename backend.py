@@ -117,7 +117,7 @@ class Database:
 
                 for r in info:
                     if r[1] in self.UpdatedTitles:
-                        print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED\033[0m\n')
+                        print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> r[3]\033[0m\n')
 
                         self.IsUpdated = False
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
