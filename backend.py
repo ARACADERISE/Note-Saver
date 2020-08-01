@@ -2,6 +2,9 @@ import sqlite3, json, os
 
 DATA = {'DatabaseCreated':False,'NoteId':1, 'NoteTitles':[]}
 
+"""
+    The following functions are "helper" functions for this file and for the Database class
+"""
 def UpdateDatabase(database,information):
     database.execute(information)
     database.commit()
@@ -18,7 +21,15 @@ def UpdateJSON(number,NoteTitles):
             sort_keys=False
         ))
 
-class SetupDatabase:
+def PrintTitles(database):
+    titles = database.execute('SELECT NoteTitle FROM Notes')
+
+    print('------------\nTITLES:\n')
+    for i in titles:
+        print(i[0],'\t')
+    print('------------\n')
+
+class Database:
 
     def __init__(self):
         self.db = sqlite3.connect('db.db')
@@ -61,6 +72,7 @@ class SetupDatabase:
                 ))
     
     def _StartupNotes_(self):
+
         print('Welcome to Notes! Here you can write a note, then it\'ll automatically save!\n\nKey Commands:\nnew - Create new note\nexit - Leave Application\nShow - Show all notes\ndel - Delete a specific NoteTitle\nupd - Update a specific NoteTitle\n')
 
         while self.run:
@@ -97,27 +109,49 @@ class SetupDatabase:
                     print(f'\nInformation for Note "{r[1]}"(#{r[0]})\n')
                     print(f'\t{r[2]}')
             if action.lower() == 'del':
+                PrintTitles(self.db)
 
-              TITLE = input('\nNoteTitle to delete: ')
+                TITLE = input('NoteTitle to delete(all to delete all of notes): ')
 
-              if TITLE in self.NoteTitles:
+                if TITLE.lower() == 'all':
+                    titles = self.db.execute('SELECT NoteTitle FROM Notes')
+                    deleted = False
 
-                self.db.execute(f'DELETE FROM Notes WHERE NoteTitle="{TITLE}"')
-                self.db.commit()
+                    #if len(self.NoteTitles)>0:
+                    for i in titles:
+                        self.db.execute(f'DELETE FROM Notes WHERE NoteTitle="{i[0]}"')
+                        self.db.commit()
+                        deleted = True
+                    else:
+                        print('No NoteTitle(s) to delete.')
+                    
+                    if deleted:
+                        # All go back to default
+                        self.NoteTitles = []
+                        self.NoteId = 1
+                        UpdateJSON(self.NoteId,self.NoteTitles)
+                        print('Successfully deleted \033[1mALL\033[0m notes')
+                elif TITLE in self.NoteTitles:
 
-                self.NoteTitles.remove(f'{TITLE}')
-                UpdateJSON(self.NoteId,self.NoteTitles)
-                self.NoteId -= 1
+                    self.db.execute(f'DELETE FROM Notes WHERE NoteTitle="{TITLE}"')
+                    self.db.commit()
 
-                print(f'\033[0;36mSuccessfully deleted "{TITLE}"(#{self.NoteId})\033[0m')
-              else:
-                print(f'"{TITLE}" doesn\'t exist')
+                    self.NoteTitles.remove(f'{TITLE}')
+                    UpdateJSON(self.NoteId,self.NoteTitles)
+                    self.NoteId -= 1
+
+                    print(f'\033[0;36mSuccessfully deleted "{TITLE}"(#{self.NoteId})\033[0m')
+                else:
+                    print(f'"{TITLE}" doesn\'t exist')
             if action.lower() == 'upd':
 
                 TO_UPD = input('\nWhat To Update(NoteTitle, NoteDetail): ')
                 
                 if TO_UPD.lower() == 'notedetail':
+                    PrintTitles(self.db)
+
                     TITLE_TO_UPDATE = input('NoteTitle to update: ')
+
                     if TITLE_TO_UPDATE in self.NoteTitles:
                         NEW_DETAILS = input(f'New NoteDetails for "{TITLE_TO_UPDATE}": ')
                         self.db.execute(f'''
@@ -131,6 +165,7 @@ class SetupDatabase:
                     else:
                         print(f'"{TITLE_TO_UPDATE}" doesn\'t exist')
                 elif TO_UPD.lower() == 'notetitle':
+                    PrintTitles(self.db)
 
                     TITLE_TO_UPDATE = input('NoteTitle to update: ')
 
@@ -155,8 +190,10 @@ class SetupDatabase:
     def _FinishDatabase_(self):
         ALL_INFO = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails from Notes')
 
-        print('------------------\nPRINTING ALL INFORMATION\n')
+        print('------------------\nALL INFORMATION STORED\n')
         for i in ALL_INFO:
             print(i)
+        else:
+           print('No information stored(must\'ve been deleted!)')
 
         self.db.close()
