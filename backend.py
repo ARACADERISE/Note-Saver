@@ -1,6 +1,6 @@
 import sqlite3, json, os
 
-DATA = {'DatabaseCreated':False,'NoteId':1, 'NoteTitles':[]}
+DATA = {'DatabaseCreated':False,'NoteId':1, 'NoteTitles':[],'IsUpdated':False}
 
 """
     The following functions are "helper" functions for this file and for the Database class
@@ -9,10 +9,11 @@ def UpdateDatabase(database,information):
     database.execute(information)
     database.commit()
 
-def UpdateJSON(number,NoteTitles):
+def UpdateJSON(number,NoteTitles,IsUpdated):
     DATA['DatabaseCreated'] = True
     DATA['NoteId'] = number
     DATA['NoteTitles'] = NoteTitles
+    DATA['IsUpdated'] = IsUpdated
 
     with open('info.json','w') as file:
         file.write(json.dumps(
@@ -39,6 +40,7 @@ class Database:
 
         if not os.path.isfile('info.json'):
             self.HasCreatedTable = False
+            self.IsUpdated = False
             self.NoteId = 1 # Starts with 1 note
             self.NoteTitles = []
         else:
@@ -48,6 +50,7 @@ class Database:
             self.HasCreatedTable = True
             self.NoteId = DATA['NoteId']
             self.NoteTitles = DATA['NoteTitles']
+            self.IsUpdated = DATA['IsUpdated']
     
     def CreateDbTable(self):
         
@@ -97,7 +100,7 @@ class Database:
                 ''')
 
                 self.NoteId += 1
-                UpdateJSON(self.NoteId,self.NoteTitles)
+                UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
             if action.lower() == 'exit':
                 self.run = False
                 print("Successfully left project.\n")
@@ -106,7 +109,10 @@ class Database:
                 info = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails from Notes')
 
                 for r in info:
-                    print(f'\nInformation for Note "{r[1]}"(#{r[0]})\n')
+                    if self.IsUpdated:
+                        print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED\033[0m\n')
+                    else:
+                        print(f'\nInformation for Note "{r[1]}"(#{r[0]})\n')
                     print(f'\t{r[2]}')
             if action.lower() == 'del':
                 PrintTitles(self.db)
@@ -130,7 +136,7 @@ class Database:
                         # All go back to default
                         self.NoteTitles = []
                         self.NoteId = 1
-                        UpdateJSON(self.NoteId,self.NoteTitles)
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
                         print('Successfully deleted \033[1mALL\033[0m notes')
                 elif TITLE in self.NoteTitles:
 
@@ -138,7 +144,7 @@ class Database:
                     self.db.commit()
 
                     self.NoteTitles.remove(f'{TITLE}')
-                    UpdateJSON(self.NoteId,self.NoteTitles)
+                    UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
                     self.NoteId -= 1
 
                     print(f'\033[0;36mSuccessfully deleted "{TITLE}"(#{self.NoteId})\033[0m')
@@ -162,6 +168,9 @@ class Database:
                         ''')
                         self.db.commit()
 
+                        self.IsUpdated = True
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
+
                         print(f'Successfully updated "{TITLE_TO_UPDATE}"')
                     else:
                         print(f'"{TITLE_TO_UPDATE}" doesn\'t exist')
@@ -182,7 +191,9 @@ class Database:
 
                         self.NoteTitles.remove(TITLE_TO_UPDATE)
                         self.NoteTitles.append(NEW_TITLE_NAME)
-                        UpdateJSON(self.NoteId,self.NoteTitles)
+
+                        self.IsUpdated = True
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
 
                         print(f'Successfully updated NoteTitle of {TITLE_TO_UPDATE}')
                     else:
@@ -195,6 +206,7 @@ class Database:
         for i in ALL_INFO:
             print(i)
         else:
-           print('No information stored(must\'ve been deleted!)')
+            if len(self.NoteTitles) < 1:
+                print('No information stored(must\'ve been deleted!)')
 
         self.db.close()

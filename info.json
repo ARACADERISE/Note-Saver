@@ -1,5 +1,8 @@
 {
   "DatabaseCreated": true,
-  "NoteId": 1,
-  "NoteTitles": []
+  "NoteId": 2,
+  "NoteTitles": [
+    "Wassup"
+  ],
+  "IsUpdated": true
 }
