@@ -101,16 +101,22 @@ class Database:
                       print(f'\nError: NoteTitle {self.NoteTitle} is already taken..make a new one!\n')
                       self.NoteTitle = input(f'Title Of Note #{self.NoteId}: ')
 
-                self.NoteTitles.append(self.NoteTitle)
-                self.NoteDetails = input(f'Deatails for Note #{self.NoteId}({self.NoteTitle}): ')
+                if not self.NoteTitle == "":
+                    self.NoteTitles.append(self.NoteTitle)
+                    self.NoteDetails = input(f'Deatails for Note #{self.NoteId}({self.NoteTitle}): ')
 
-                UpdateDatabase(self.db,f'''
-                INSERT INTO Notes(NoteId,NoteTitle,NoteDetails,UPDATE_DETAILS)
-                VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}","ORIGINAL")
-                ''')
+                    if not self.NoteDetails == "":
+                        UpdateDatabase(self.db,f'''
+                        INSERT INTO Notes(NoteId,NoteTitle,NoteDetails,UPDATE_DETAILS)
+                        VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}","ORIGINAL")
+                        ''')
 
-                self.NoteId += 1
-                UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus)
+                        self.NoteId += 1
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus)
+                    else:
+                        print('NoteDetail was not assigned')
+                else:
+                    print('NoteTitle was not assigned')
             if action.lower() == 'exit':
                 self.run = False
                 print("Successfully left project.\n")
