@@ -1,8 +1,12 @@
 {
   "DatabaseCreated": true,
-  "NoteId": 2,
+  "NoteId": 3,
   "NoteTitles": [
-    "Wassup"
+    "Hey, yo, wassup",
+    "My Name"
   ],
-  "IsUpdated": true
+  "IsUpdated": false,
+  "UpdatedTitles": [
+    "Hey, yo, wassup"
+  ]
 }

@@ -1,6 +1,6 @@
 import sqlite3, json, os
 
-DATA = {'DatabaseCreated':False,'NoteId':1, 'NoteTitles':[],'IsUpdated':False}
+DATA = {'DatabaseCreated':False,'NoteId':1, 'NoteTitles':[],'IsUpdated':False, 'UpdatedTitles':[]}
 
 """
     The following functions are "helper" functions for this file and for the Database class
@@ -9,11 +9,12 @@ def UpdateDatabase(database,information):
     database.execute(information)
     database.commit()
 
-def UpdateJSON(number,NoteTitles,IsUpdated):
+def UpdateJSON(number,NoteTitles,IsUpdated,UpdatedTitles):
     DATA['DatabaseCreated'] = True
     DATA['NoteId'] = number
     DATA['NoteTitles'] = NoteTitles
     DATA['IsUpdated'] = IsUpdated
+    DATA['UpdatedTitles'] = UpdatedTitles
 
     with open('info.json','w') as file:
         file.write(json.dumps(
@@ -43,6 +44,7 @@ class Database:
             self.IsUpdated = False
             self.NoteId = 1 # Starts with 1 note
             self.NoteTitles = []
+            self.UpdatedTitles = []
         else:
             DATA = json.loads(
                 open('info.json','r').read()
@@ -51,6 +53,7 @@ class Database:
             self.NoteId = DATA['NoteId']
             self.NoteTitles = DATA['NoteTitles']
             self.IsUpdated = DATA['IsUpdated']
+            self.UpdatedTitles = DATA['UpdatedTitles']
     
     def CreateDbTable(self):
         
@@ -100,7 +103,7 @@ class Database:
                 ''')
 
                 self.NoteId += 1
-                UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
+                UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
             if action.lower() == 'exit':
                 self.run = False
                 print("Successfully left project.\n")
@@ -109,11 +112,11 @@ class Database:
                 info = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails from Notes')
 
                 for r in info:
-                    if self.IsUpdated:
+                    if r[1] in self.UpdatedTitles:
                         print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED\033[0m\n')
-                        
+
                         self.IsUpdated = False
-                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
                     else:
                         print(f'\nInformation for Note "{r[1]}"(#{r[0]})\n')
                     print(f'\t{r[2]}')
@@ -139,7 +142,7 @@ class Database:
                         # All go back to default
                         self.NoteTitles = []
                         self.NoteId = 1
-                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
                         print('Successfully deleted \033[1mALL\033[0m notes')
                 elif TITLE in self.NoteTitles:
 
@@ -147,7 +150,7 @@ class Database:
                     self.db.commit()
 
                     self.NoteTitles.remove(f'{TITLE}')
-                    UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
+                    UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
                     self.NoteId -= 1
 
                     print(f'\033[0;36mSuccessfully deleted "{TITLE}"(#{self.NoteId})\033[0m')
@@ -172,7 +175,9 @@ class Database:
                         self.db.commit()
 
                         self.IsUpdated = True
-                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
+                        self.UpdatedTitles.append(TITLE_TO_UPDATE)
+
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
 
                         print(f'Successfully updated "{TITLE_TO_UPDATE}"')
                     else:
@@ -194,9 +199,10 @@ class Database:
 
                         self.NoteTitles.remove(TITLE_TO_UPDATE)
                         self.NoteTitles.append(NEW_TITLE_NAME)
-
                         self.IsUpdated = True
-                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated)
+                        self.UpdatedTitles.append(NEW_TITLE_NAME)
+
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles)
 
                         print(f'Successfully updated NoteTitle of {TITLE_TO_UPDATE}')
                     else:
