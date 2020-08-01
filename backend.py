@@ -66,7 +66,8 @@ class Database:
                 CREATE TABLE Notes (
                     NoteId INT PRIMARY KEY NOT NULL,
                     NoteTitle TEXT NOT NULL,
-                    NoteDetails TEXT NOT NULL
+                    NoteDetails TEXT NOT NULL,
+                    UPDATE_DETAILS TEXT
                 );
             ''')
 
@@ -102,7 +103,7 @@ class Database:
 
                 UpdateDatabase(self.db,f'''
                 INSERT INTO Notes(NoteId,NoteTitle,NoteDetails)
-                VALUES({self.NoteId},'{self.NoteTitle}','{self.NoteDetails}')
+                VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}")
                 ''')
 
                 self.NoteId += 1
@@ -173,9 +174,23 @@ class Database:
 
                     if TITLE_TO_UPDATE in self.NoteTitles:
                         NEW_DETAILS = input(f'New NoteDetails for "{TITLE_TO_UPDATE}": ')
+
+                        LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
+
+                        for i in LAST_UPDATE_DETAIL:
+                            LAST_UPDATE_DETAIL = i[0]
+                        
+                        if LAST_UPDATE_DETAIL == "Updated NoteDetail":
+                            LAST_UPDATE_DETAIL = ""
+
                         self.db.execute(f'''
                         UPDATE Notes
                         SET NoteDetails="{NEW_DETAILS}"
+                        WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                        ''')
+                        self.db.execute(f'''
+                        Update Notes
+                        SET UPDATE_DETAILS="Updated NoteDetail{LAST_UPDATE_DETAIL}"
                         WHERE NoteTitle="{TITLE_TO_UPDATE}"
                         ''')
                         self.db.commit()
@@ -199,7 +214,13 @@ class Database:
                         self.db.execute(f'''
                         UPDATE Notes
                         SET NoteTitle="{NEW_TITLE_NAME}"
-                        where NoteTitle="{TITLE_TO_UPDATE}"
+                        WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                        ''')
+                        
+                        self.db.execute(f'''
+                        UPDATE Notes
+                        SET UPDATE_DETAILS="Update NoteTitles"
+                        WHERE NoteTitle="{TITLE_TO_UPDATE}"
                         ''')
                         self.db.commit()
 
@@ -215,7 +236,7 @@ class Database:
                         print(f'NoteTitle "{TITLE_TO_UPDATE}" doesn\'t exist')
 
     def _FinishDatabase_(self):
-        ALL_INFO = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails from Notes')
+        ALL_INFO = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS from Notes')
 
         print('------------------\nALL INFORMATION STORED\n')
         for i in ALL_INFO:
