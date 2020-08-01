@@ -113,7 +113,7 @@ class Database:
                 print("Successfully left project.\n")
             if action.lower() == 'show':
                 #db_connect = sqlite3.connect('db.db')
-                info = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails from Notes')
+                info = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS from Notes')
 
                 for r in info:
                     if r[1] in self.UpdatedTitles:
