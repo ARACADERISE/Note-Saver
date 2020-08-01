@@ -117,6 +117,7 @@ class Database:
                         self.NoteId += 1
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
                     else:
+                        self.NoteTitles.remove(self.NoteTitle)
                         print('NoteDetail was not assigned')
                 else:
                     print('NoteTitle was not assigned')
