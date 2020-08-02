@@ -1,5 +1,8 @@
 import sqlite3, json, os
 from datetime import date
+from Port import (
+    Port
+)
 
 # Temporary information to keep everything up to date
 DATA = {'DatabaseCreated':False,'NoteId':1, 'NoteTitles':[],'IsUpdated':False, 'UpdatedTitles':[], 'RecentlyUpdatedStatus':'','LastOldInfo':''}
@@ -49,6 +52,7 @@ class Database:
         self.NoteDetails = ''
         self.run = True
         self.TodaysDate = date.today()
+        self.PortDb = Port(self.db)
 
         if not os.path.isfile('info.json'):
             self.HasCreatedTable = False
@@ -57,7 +61,8 @@ class Database:
             self.NoteTitles = []
             self.UpdatedTitles = []
             self.RecentlyUpdateStatus = ''
-            self.LastOldInfo = ''
+            self.LastOldInfo = ''            
+
         else:
             DATA = json.loads(
                 open('info.json','r').read()
@@ -79,11 +84,13 @@ class Database:
                     NoteId INT PRIMARY KEY NOT NULL,
                     NoteTitle TEXT NOT NULL,
                     NoteDetails TEXT NOT NULL,
+                    Port_Connection TEXT NOTE NULL,
                     UPDATE_DETAILS TEXT,
                     DATE TEXT NOT NULL,
                     UPDATE_DATE TEXT
                 );
             ''')
+            self.PortDb._CreatePortTable_()
 
             self.HasCreatedTable = True
             DATA['DatabaseCreated'] = self.HasCreatedTable
@@ -94,12 +101,21 @@ class Database:
                     indent=2,
                     sort_keys=False
                 ))
+            
+            self.PortDb._Update_Data_(DATA)
     
     def _StartupNotes_(self):
 
         Menu()
 
         while self.run:
+            if not os.path.isfile('port_info.json'):
+                CREATE_PORT = input('Create A Port(random number that you will be able to remember) -> ')
+                PORT_NAME = input(f'Port {CREATE_PORT} Name -> ')
+
+                CREATE_PORT,PORT_NAME = self.PortDb._CHECK_NEW_PORT_DETAIL_(CREATE_PORT,PORT_NAME)
+                self.PortDb._INSERT_(f'''INSERT INTO Ports(PortId,PortId_Name,Notes_In_Port) VALUES ("{CREATE_PORT}","{PORT_NAME}",{self.NoteId})''')
+
             action = input('\nAction -> ')
 
             if action.lower() == 'new':
@@ -118,11 +134,16 @@ class Database:
 
                     if not self.NoteDetails == "":
                         UpdateDatabase(self.db,f'''
-                        INSERT INTO Notes(NoteId,NoteTitle,NoteDetails,UPDATE_DETAILS,DATE)
-                        VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}","ORIGINAL","{self.TodaysDate}")
+                        INSERT INTO Notes(NoteId,NoteTitle,NoteDetails,Port_Connection,UPDATE_DETAILS,DATE)
+                        VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}","{self.PortDb._Port_Connection_()}","ORIGINAL","{self.TodaysDate}")
                         ''')
 
                         self.NoteId += 1
+                        self.PortDb._UPDATE_(f'''
+                        UPDATE Ports
+                        SET Notes_In_Port={self.NoteId}
+                        WHERE PortId="{self.PortDb._Port_Connection_()}"
+                        ''')
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
                     else:
                         self.NoteTitles.remove(self.NoteTitle)
@@ -157,7 +178,8 @@ class Database:
                 os.system('clear')
                 Menu()
             if action.lower() == 'del':
-                PrintTitles(self.db)
+                titles = []
+                PrintTitles(self.db, titles)
 
                 TITLE = input('NoteTitle to delete(all to delete all of notes): ')
 
@@ -178,6 +200,11 @@ class Database:
                         # All go back to default
                         self.NoteTitles = []
                         self.NoteId = 1
+                        self.PortDb._UPDATE_(f'''
+                        UPDATE Ports
+                        SET Notes_In_Port={self.NoteId}
+                        WHERE PortId="{self.PortDb._Port_Connection_()}"
+                        ''')
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
                         print('Successfully deleted \033[1mALL\033[0m notes')
                 elif TITLE in self.NoteTitles:
@@ -188,6 +215,11 @@ class Database:
                     self.NoteTitles.remove(f'{TITLE}')
                     UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
                     self.NoteId -= 1
+                    self.PortDb._UPDATE_(f'''
+                    UPDATE Ports
+                    SET Notes_In_Port={self.NoteId}
+                    WHERE PortId="{self.PortDb._Port_Connection_()}"
+                    ''')
 
                     print(f'\033[0;36mSuccessfully deleted "{TITLE}"(#{self.NoteId})\033[0m')
                 else:
