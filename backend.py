@@ -109,11 +109,12 @@ class Database:
         Menu()
 
         while self.run:
-            CREATE_PORT = input('Create A Port(random number that you will be able to remember) -> ')
-            PORT_NAME = input(f'Port {CREATE_PORT} Name -> ')
+            if not os.path.isfile('port_info.json'):
+                CREATE_PORT = input('Create A Port(random number that you will be able to remember) -> ')
+                PORT_NAME = input(f'Port {CREATE_PORT} Name -> ')
 
-            CREATE_PORT,PORT_NAME = self.PortDb._CHECK_NEW_PORT_DETAIL_(CREATE_PORT,PORT_NAME)
-            self.PortDb._INSERT_(f'''INSERT INTO Ports(PortId,PortId_Name,Notes_In_Port) VALUES ("{CREATE_PORT}","{PORT_NAME}",{self.NoteId})''')
+                CREATE_PORT,PORT_NAME = self.PortDb._CHECK_NEW_PORT_DETAIL_(CREATE_PORT,PORT_NAME)
+                self.PortDb._INSERT_(f'''INSERT INTO Ports(PortId,PortId_Name,Notes_In_Port) VALUES ("{CREATE_PORT}","{PORT_NAME}",{self.NoteId})''')
 
             action = input('\nAction -> ')
 
