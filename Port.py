@@ -2,6 +2,7 @@
     This will setup different ports for the Notes to dwell in!
 """
 import os, json
+from time import sleep
 
 PORT_DATA = {'PortIdList':[],'PortIdNameList':[],'Notes_In_Port':1}
 
@@ -79,7 +80,7 @@ class Port:
     
     def _INSERT_(self, info):
 
-        self.db.execute(info)
+        self.db.execute(f'{info}')
         info = self.db.execute('SELECT PortId, PortId_Name FROM Ports')
         
         print('\nPORT CONNECTIONS:\n')
@@ -91,19 +92,54 @@ class Port:
 
         UpdateJson(self.PortIdList,self.PortIdNameList,self.NotesInPorts)
     
-    def _UPDATE_(self, UPDATE_INFO):
-
-        self.db.execute(UPDATE_INFO)
-        self.db.commit()
-
-        self.NotesInPorts = self.db.execute('''
-        SELECT Notes_In_Port FROM Ports
-        ''')
-        for i in self.NotesInPorts:
-            self.NotesInPort = i[0]
-            break
-            
-        UpdateJson(self.PortIdList,self.PortIdNameList,self.NotesInPort)
-    
     def _Update_Data_(self, DATA):
         if self.data == {}: self.data = DATA
+    
+    def PrintPorts(self):
+
+        ports = self.db.execute('SELECT PortId FROM Ports')
+        
+        print('Existing Ports: \n')
+        for i in ports:
+            print(i[0])
+    
+    def _Connect_To_Port_(self, PortId): 
+
+        if PortId in self.PortIdList:
+            ports = self.db.execute(f'SELECT PortId FROM Ports WHERE PortId="{PortId}"')
+
+            for i in ports:
+                os.system('clear')
+                print(f'Connected To Port {i[0]}')
+                break
+
+            self.RecentPortId = PortId
+        else:
+            print(f'{PortId} port connection does not exist. Creating...')
+            sleep(2)
+            PORT_NAME = input(f'\nPort {PortId} name -> ')
+            self.db.execute(f'INSERT INTO Ports(PortId,PortId_Name) VALUES("{PortId}","{PORT_NAME}")')
+            self.db.commit()
+
+            self.PortIdList.append(PortId)
+            self.PortIdNameList.append(PORT_NAME)
+            UpdateJson(self.PortIdList,self.PortIdNameList,self.NotesInPorts)
+
+            self.RecentPortId = PortId
+    
+    def GatherPortName(self):
+        
+        if self.RecentPortId != '':
+            port_name = self.db.execute(f'SELECT PortId_Name FROM Ports WHERE PortId="{self.RecentPortId}"')
+
+            for i in port_name:
+                port_name = i[0]
+                break
+
+            return port_name
+        else: return ''
+    
+    def FinishPortDb(self):
+
+        self.db.execute(f'DELETE FROM Ports WHERE PortId="{self.RecentPortId}"')
+        self.db.commit()
