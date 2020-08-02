@@ -53,6 +53,7 @@ class Database:
         self.run = True
         self.TodaysDate = date.today()
         self.PortDb = Port(self.db)
+        self.PortIdName = ''
 
         if not os.path.isfile('info.json'):
             self.HasCreatedTable = False
@@ -115,8 +116,24 @@ class Database:
 
                 CREATE_PORT,PORT_NAME = self.PortDb._CHECK_NEW_PORT_DETAIL_(CREATE_PORT,PORT_NAME)
                 self.PortDb._INSERT_(f'''INSERT INTO Ports(PortId,PortId_Name,Notes_In_Port) VALUES ("{CREATE_PORT}","{PORT_NAME}",{self.NoteId})''')
+                self.PortDb._Connect_To_Port_(self.PortDb._Port_Connection_())
 
-            action = input('\nAction -> ')
+                Menu()
+                self.PortIdName = self.PortDb.GatherPortName()
+            elif os.path.isfile('port_info.json'):
+                self.PortIdName = self.PortDb.GatherPortName()
+
+                if self.PortIdName == '':
+                    self.PortDb.PrintPorts()
+                    Port_To_Connect_To = input('Port To Connect To -> ')
+                    self.PortDb._Connect_To_Port_(Port_To_Connect_To)
+
+                    Menu()
+                    self.PortIdName = self.PortDb.GatherPortName()
+
+            if self.PortIdName != '':
+                print(f'\n"{self.PortIdName}"')
+            action = input('Action -> ')
 
             if action.lower() == 'new':
 
@@ -148,6 +165,7 @@ class Database:
             if action.lower() == 'exit':
                 self.run = False
                 print("Successfully left project.\n")
+                self.PortDb.FinishPortDb()
             if action.lower() == 'show':
                 #db_connect = sqlite3.connect('db.db')
                 info = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE from Notes')
