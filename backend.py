@@ -54,6 +54,7 @@ class Database:
         self.TodaysDate = date.today()
         self.PortDb = Port(self.db)
         self.PortIdName = ''
+        self.Port_Connection = ''
 
         if not os.path.isfile('info.json'):
             self.HasCreatedTable = False
@@ -126,7 +127,7 @@ class Database:
                 if self.PortIdName == '':
                     self.PortDb.PrintPorts()
                     Port_To_Connect_To = input('Port To Connect To -> ')
-                    self.PortDb._Connect_To_Port_(Port_To_Connect_To)
+                    self.Port_Connection = self.PortDb._Connect_To_Port_(Port_To_Connect_To)
 
                     Menu()
                     self.PortIdName = self.PortDb.GatherPortName()
@@ -165,12 +166,12 @@ class Database:
             if action.lower() == 'exit':
                 self.run = False
                 print("Successfully left project.\n")
-                self.PortDb.FinishPortDb()
             if action.lower() == 'show':
                 #db_connect = sqlite3.connect('db.db')
-                info = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE from Notes')
+                info = self.db.execute(f'SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE, Port_Connection FROM Notes WHERE Port_Connection="{self.Port_Connection}"')
 
                 for r in info:
+                    #if r[5] == self.PortIdName:
                     if r[1] in self.UpdatedTitles:
                         if self.RecentlyUpdateStatus == 'Updated NoteTitle':
                             print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m ({r[4]})\nOLD NoteTitle -> "{self.LastOldInfo}"\n')
@@ -187,6 +188,7 @@ class Database:
                     else:
                         print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m ({r[4]})\n')
                         print(f'\t{r[2]}')
+
             if action.lower() == 'clr':
                 os.system('clear')
                 Menu()
@@ -343,7 +345,7 @@ class Database:
                         print(f'NoteTitle "{TITLE_TO_UPDATE}" doesn\'t exist')
 
     def _FinishDatabase_(self):
-        ALL_INFO = self.db.execute('SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE, UPDATE_DATE from Notes')
+        ALL_INFO = self.db.execute(f'SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE, UPDATE_DATE FROM Notes WHERE Port_Connection="{self.Port_Connection}"')
 
         print('------------------\nALL INFORMATION STORED\n')
         for i in ALL_INFO:
@@ -353,3 +355,4 @@ class Database:
                 print('No information stored(must\'ve been deleted!)')
 
         self.db.close()
+        self.PortDb.FinishPortDb()
