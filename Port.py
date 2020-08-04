@@ -96,12 +96,10 @@ class Port:
         if self.data == {}: self.data = DATA
     
     def PrintPorts(self):
-
-        ports = self.db.execute('SELECT PortId FROM Ports')
         
         print('Existing Ports: \n')
-        for i in ports:
-            print(i[0])
+        for i in self.PortIdList:
+            print(i)
     
     def _Connect_To_Port_(self, PortId): 
 
@@ -126,6 +124,8 @@ class Port:
             UpdateJson(self.PortIdList,self.PortIdNameList,self.NotesInPorts)
 
             self.RecentPortId = PortId
+
+            return self.RecentPortId
     
     def GatherPortName(self):
         
@@ -139,7 +139,10 @@ class Port:
             return port_name
         else: return ''
     
-    def FinishPortDb(self):
+    def FinishPortDb(self, destroy=False):
 
-        self.db.execute(f'DELETE FROM Ports WHERE PortId="{self.RecentPortId}"')
-        self.db.commit()
+        if destroy:
+            self.db.execute(f'DELETE FROM Ports WHERE PortId="{self.RecentPortId}"')
+            self.db.commit()
+        
+        self.db.close()
