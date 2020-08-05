@@ -74,8 +74,9 @@ class Port:
         port = self.db.execute('SELECT PortId FROM Ports')
 
         for i in port:
-            port = i[0]
-            break
+            if i[0] == self.PortIdList[len(self.PortIdList)-1]:
+                port = i[0]
+                break
         return port
     
     def _INSERT_(self, info):
