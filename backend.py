@@ -117,7 +117,7 @@ class Database:
 
                 CREATE_PORT,PORT_NAME = self.PortDb._CHECK_NEW_PORT_DETAIL_(CREATE_PORT,PORT_NAME)
                 self.PortDb._INSERT_(f'''INSERT INTO Ports(PortId,PortId_Name,Notes_In_Port) VALUES ("{CREATE_PORT}","{PORT_NAME}",{self.NoteId})''')
-                self.PortDb._Connect_To_Port_(self.PortDb._Port_Connection_())
+                self.PortDb._Connect_To_Port_(CREATE_PORT)
 
                 Menu()
                 self.PortIdName = self.PortDb.GatherPortName()
@@ -127,12 +127,13 @@ class Database:
                 if self.PortIdName == '':
                     self.PortDb.PrintPorts()
                     Port_To_Connect_To = input('Port To Connect To -> ')
-                    self.Port_Connection = self.PortDb._Connect_To_Port_(Port_To_Connect_To)
+                    self.PortDb._Connect_To_Port_(Port_To_Connect_To)
 
                     Menu()
                     self.PortIdName = self.PortDb.GatherPortName()
             
             self.Port_Connection = self.PortDb._Port_Connection_()
+
             if self.PortIdName != '':
                 print(f'\n"{self.PortIdName}"')
             action = input('Action -> ')
@@ -346,10 +347,14 @@ class Database:
                         print(f'NoteTitle "{TITLE_TO_UPDATE}" doesn\'t exist')
 
     def _FinishDatabase_(self):
-        ALL_INFO = self.db.execute(f'SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE, UPDATE_DATE FROM Notes WHERE Port_Connection="{self.Port_Connection}"')
+        ALL_INFO = self.db.execute(f'SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE, UPDATE_DATE, Port_Connection FROM Notes WHERE Port_Connection="{self.Port_Connection}"')
 
         print('------------------\nALL INFORMATION STORED\n')
         for i in ALL_INFO:
+            if i[5] == None:
+                a = list(i)
+                a[5] = 'No Updates'
+                i = tuple(a)
             print(i)
         else:
             if len(self.NoteTitles) < 1:
