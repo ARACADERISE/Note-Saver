@@ -131,7 +131,8 @@ class Database:
 
                     Menu()
                     self.PortIdName = self.PortDb.GatherPortName()
-
+            
+            self.Port_Connection = self.PortDb._Port_Connection_()
             if self.PortIdName != '':
                 print(f'\n"{self.PortIdName}"')
             action = input('Action -> ')
