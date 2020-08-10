@@ -4,16 +4,25 @@
 import os, json
 from time import sleep
 
-PORT_DATA = {'PortIdList':[],'PortIdNameList':[],'Notes_In_Port':1}
+PORT_DATA = {'PortIdList':[],'PortIdNameList':[]}
+NOTES_IN_PORTS = {}
 
-def UpdateJson(ListId,ListIdNames,NotesInPort):
+def UpdateJson(ListId,ListIdNames):
     PORT_DATA['PortIdList'] = ListId
     PORT_DATA['PortIdNameList'] = ListIdNames
-    PORT_DATA['Notes_In_Port'] = NotesInPort
 
     with open('port_info.json','w') as file:
         file.write(json.dumps(
             PORT_DATA,
+            indent=2,
+            sort_keys=False
+        ))
+
+def UpdateNotesInPorts(NOTES_IN_PORTS_):
+
+    with open('n_i_p.json','w') as file:
+        file.write(json.dumps(
+            NOTES_IN_PORTS_,
             indent=2,
             sort_keys=False
         ))
@@ -28,20 +37,25 @@ class Port:
         if not os.path.isfile('port_info.json'):
             self.PortIdList = []
             self.PortIdNameList = []
-            self.NotesInPorts = 1
         if os.path.isfile('port_info.json'):
             PORT_DATA = json.loads(
                 open('port_info.json','r').read()
             )
             self.PortIdList = PORT_DATA['PortIdList']
             self.PortIdNameList = PORT_DATA['PortIdNameList']
-            self.NotesInPorts = PORT_DATA['Notes_In_Port']
 
         if not os.path.isfile('info.json'): 
             self.data = {}
         if os.path.isfile('info.json'): 
             self.data = json.loads(
                 open('info.json','r').read()
+            )
+        
+        if not os.path.isfile('n_i_p.json'):
+            self.NotesInPorts = {}
+        if os.path.isfile('n_i_p.json'):
+            self.NotesInPorts = json.loads(
+                open('n_i_p.json','r').read()
             )
     
     def _CreatePortTable_(self):
@@ -89,9 +103,11 @@ class Port:
             print(i)
             self.PortIdList.append(i[0])
             self.PortIdNameList.append(i[1])
+            self.NotesInPorts.update({i[1]:1,i[1]+'_':[]})
         self.db.commit()
 
-        UpdateJson(self.PortIdList,self.PortIdNameList,self.NotesInPorts)
+        UpdateNotesInPorts(self.NotesInPorts)
+        UpdateJson(self.PortIdList,self.PortIdNameList)
     
     def _Update_Data_(self, DATA):
         if self.data == {}: self.data = DATA
@@ -122,9 +138,12 @@ class Port:
 
             self.PortIdList.append(PortId)
             self.PortIdNameList.append(PORT_NAME)
-            UpdateJson(self.PortIdList,self.PortIdNameList,self.NotesInPorts)
+            UpdateJson(self.PortIdList,self.PortIdNameList)
 
             self.RecentPortId = PortId
+
+            self.NotesInPorts.update({PORT_NAME:1,PORT_NAME+'_':[]})
+            UpdateNotesInPorts(self.NotesInPorts)
 
             return self.RecentPortId
     
@@ -139,6 +158,12 @@ class Port:
 
             return port_name
         else: return ''
+    
+    def UpdateAmmountOfNotes(self, port_name, ammount_of_notes, note_titles):
+
+        self.NotesInPorts[port_name] = ammount_of_notes
+        self.NotesInPorts[port_name+'_'].append(note_titles)
+        UpdateNotesInPorts(self.NotesInPorts)
     
     def FinishPortDb(self, destroy=False):
 
