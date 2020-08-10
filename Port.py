@@ -159,10 +159,14 @@ class Port:
             return port_name
         else: return ''
     
-    def UpdateAmmountOfNotes(self, port_name, ammount_of_notes, note_titles):
+    def UpdateAmmountOfNotes(self, port_name, ammount_of_notes, note_titles, is_deleted = False, item_to_delete=''):
 
         self.NotesInPorts[port_name] = ammount_of_notes
         self.NotesInPorts[port_name+'_'].append(note_titles)
+
+        if is_deleted:
+            self.NotesInPorts[port_name+'_'].remove(item_to_delete)
+
         UpdateNotesInPorts(self.NotesInPorts)
     
     def FinishPortDb(self, destroy=False):
