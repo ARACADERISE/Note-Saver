@@ -33,8 +33,8 @@ def UpdateJSON(number,NoteTitles,IsUpdated,UpdatedTitles,UpdStat,LOI):
 def Menu():
     print('Welcome to Notes! Here you can write a note, then it\'ll automatically save!\n\nKey Commands:\nnew - Create new note\nexit - Leave Application\nShow - Show all notes\ndel - Delete a specific NoteTitle\nupd - Update a specific NoteTitle\nclr - Clear Terminal\n')
 
-def PrintTitles(database,titles_):
-    titles = database.execute('SELECT NoteTitle FROM Notes')
+def PrintTitles(database,titles_,port_connection):
+    titles = database.execute(f'SELECT NoteTitle FROM Notes WHERE Port_Connection="{port_connection}"')
     f = 1
 
     print('------------\nTITLES:\n')
@@ -166,7 +166,7 @@ class Database:
                         ''')
 
                         self.NoteId += 1
-                        self.PortDb.UpdateAmmountOfNotes(self.PortIdName,self.NoteId,self.NoteTitles)
+                        self.PortDb.UpdateAmmountOfNotes(self.PortIdName,self.NoteId,self.NoteTitles[0])
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
                     else:
                         self.NoteTitles.remove(self.NoteTitle)
@@ -203,7 +203,7 @@ class Database:
                 os.system('clear')
                 Menu()
             if action.lower() == 'del':
-                PrintTitles(self.db)
+                PrintTitles(self.db,self.Port_Connection)
 
                 TITLE = input('NoteTitle to delete(all to delete all of notes): ')
 
@@ -244,14 +244,14 @@ class Database:
                 
                 if TO_UPD.lower() == 'notedetail':
                     titles=[]
-                    PrintTitles(self.db,titles)
+                    PrintTitles(self.db,titles,self.Port_Connection)
 
                     TITLE_TO_UPDATE = input('NoteTitle to update: ')
 
                     if TITLE_TO_UPDATE.isdigit():
                         TITLE_TO_UPDATE = titles[int(TITLE_TO_UPDATE)-1]
 
-                    if TITLE_TO_UPDATE in self.NoteTitles:
+                    if TITLE_TO_UPDATE in self.NoteTitles[0]:
                         NEW_DETAILS = input(f'New NoteDetails for "{TITLE_TO_UPDATE}": ')
 
                         LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
@@ -297,14 +297,14 @@ class Database:
                         print(f'"{TITLE_TO_UPDATE}" doesn\'t exist')
                 elif TO_UPD.lower() == 'notetitle':
                     titles = []
-                    PrintTitles(self.db,titles)
+                    PrintTitles(self.db,titles,self.Port_Connection)
 
                     TITLE_TO_UPDATE = input('NoteTitle to update: ')
 
                     if TITLE_TO_UPDATE.isdigit():
                         TITLE_TO_UPDATE = titles[int(TITLE_TO_UPDATE)-1]
 
-                    if TITLE_TO_UPDATE in self.NoteTitles:
+                    if TITLE_TO_UPDATE in self.NoteTitles[0]:
                         NEW_TITLE_NAME = input(f'New NoteTitle Name For "{TITLE_TO_UPDATE}": ')
 
                         if not NEW_TITLE_NAME == "":
@@ -346,6 +346,7 @@ class Database:
                             self.IsUpdated = True
                             self.UpdatedTitles.append(NEW_TITLE_NAME)
 
+                            self.PortDb.UpdateAmmountOfNotes(self.PortIdName,self.NoteId,self.NoteTitles[0],True,TITLE_TO_UPDATE)
                             UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
 
                             print(f'Successfully updated NoteTitle of {TITLE_TO_UPDATE}')
