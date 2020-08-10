@@ -59,8 +59,6 @@ class Database:
         if not os.path.isfile('info.json'):
             self.HasCreatedTable = False
             self.IsUpdated = False
-            self.NoteId = 1 # Starts with 1 note
-            self.NoteTitles = []
             self.UpdatedTitles = []
             self.RecentlyUpdateStatus = ''
             self.LastOldInfo = ''            
@@ -70,12 +68,14 @@ class Database:
                 open('info.json','r').read()
             )
             self.HasCreatedTable = True
-            self.NoteId = DATA['NoteId']
-            self.NoteTitles = DATA['NoteTitles']
             self.IsUpdated = DATA['IsUpdated']
             self.UpdatedTitles = DATA['UpdatedTitles']
             self.RecentlyUpdateStatus = DATA['RecentlyUpdatedStatus']
             self.LastOldInfo = DATA['LastOldInfo']
+        
+        if not os.path.isfile('n_i_p.json'):
+            self.NoteId = 1
+            self.NoteTitles = []
     
     def CreateDbTable(self):
         
@@ -83,7 +83,7 @@ class Database:
 
             self.db.execute('''
                 CREATE TABLE Notes (
-                    NoteId INT PRIMARY KEY NOT NULL,
+                    NoteId INT NOT NULL,
                     NoteTitle TEXT NOT NULL,
                     NoteDetails TEXT NOT NULL,
                     Port_Connection TEXT NOTE NULL,
@@ -134,6 +134,13 @@ class Database:
             
             self.Port_Connection = self.PortDb._Port_Connection_()
 
+            if os.path.isfile('n_i_p.json'):
+                INFO = json.loads(
+                    open('n_i_p.json','r').read()
+                )
+                self.NoteId = INFO[self.PortIdName]
+                self.NoteTitles = INFO[self.PortIdName+'_']
+
             if self.PortIdName != '':
                 print(f'\n"{self.PortIdName}"')
             action = input('Action -> ')
@@ -159,6 +166,7 @@ class Database:
                         ''')
 
                         self.NoteId += 1
+                        self.PortDb.UpdateAmmountOfNotes(self.PortIdName,self.NoteId,self.NoteTitles)
                         UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
                     else:
                         self.NoteTitles.remove(self.NoteTitle)
