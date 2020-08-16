@@ -1,185 +1,378 @@
+import sqlite3, json, os
+from datetime import date
+from Port import (
+    Port
+)
+
+# Temporary information to keep everything up to date
+DATA = {'DatabaseCreated':False,'NoteId':1, 'NoteTitles':[],'IsUpdated':False, 'UpdatedTitles':[], 'RecentlyUpdatedStatus':'','LastOldInfo':''}
+
 """
-    This will setup different ports for the Notes to dwell in!
+    The following functions are "helper" functions for this file and for the Database class
 """
-import os, json
-from time import sleep
+def UpdateDatabase(database,information):
+    database.execute(information)
+    database.commit()
 
-PORT_DATA = {'PortIdList':[],'PortIdNameList':[]}
-NOTES_IN_PORTS = {}
+def UpdateJSON(number,NoteTitles,IsUpdated,UpdatedTitles,UpdStat,LOI):
+    DATA['DatabaseCreated'] = True
+    DATA['NoteId'] = number
+    DATA['NoteTitles'] = NoteTitles
+    DATA['IsUpdated'] = IsUpdated
+    DATA['UpdatedTitles'] = UpdatedTitles
+    DATA['RecentlyUpdatedStatus'] = UpdStat
+    DATA['LastOldInfo'] = LOI
 
-def UpdateJson(ListId,ListIdNames):
-    PORT_DATA['PortIdList'] = ListId
-    PORT_DATA['PortIdNameList'] = ListIdNames
-
-    with open('port_info.json','w') as file:
+    with open('info.json','w') as file:
         file.write(json.dumps(
-            PORT_DATA,
+            DATA,
             indent=2,
             sort_keys=False
         ))
 
-def UpdateNotesInPorts(NOTES_IN_PORTS_):
+def Menu():
+    print('Welcome to Notes! Here you can write a note, then it\'ll automatically save!\n\nKey Commands:\nnew - Create new note\nexit - Leave Application\nShow - Show all notes\ndel - Delete a specific NoteTitle\nupd - Update a specific NoteTitle\nclr - Clear Terminal\n')
 
-    with open('n_i_p.json','w') as file:
-        file.write(json.dumps(
-            NOTES_IN_PORTS_,
-            indent=2,
-            sort_keys=False
-        ))
+def PrintTitles(database,titles_,port_connection):
+    titles = database.execute(f'SELECT NoteTitle FROM Notes WHERE Port_Connection="{port_connection}"')
+    f = 1
 
-class Port:
+    print('------------\nTITLES:\n')
+    for i in titles:
+        print(str(f)+') ',i[0],'\t')
+        titles_.append(i[0])
+        f+=1
+    print('------------\n')
 
-    def __init__(self, databaseConnection):
+class Database:
 
-        self.db = databaseConnection
-        self.RecentPortId = ''
+    def __init__(self):
+        self.db = sqlite3.connect('DB.db')
+        self.NoteTitle = ''
+        self.NoteDetails = ''
+        self.run = True
+        self.TodaysDate = date.today()
+        self.PortDb = Port(self.db)
+        self.PortIdName = ''
+        self.Port_Connection = ''
 
-        if not os.path.isfile('port_info.json'):
-            self.PortIdList = []
-            self.PortIdNameList = []
-        if os.path.isfile('port_info.json'):
-            PORT_DATA = json.loads(
-                open('port_info.json','r').read()
-            )
-            self.PortIdList = PORT_DATA['PortIdList']
-            self.PortIdNameList = PORT_DATA['PortIdNameList']
+        if not os.path.isfile('info.json'):
+            self.HasCreatedTable = False
+            self.IsUpdated = False
+            self.UpdatedTitles = []
+            self.RecentlyUpdateStatus = ''
+            self.LastOldInfo = ''            
 
-        if not os.path.isfile('info.json'): 
-            self.data = {}
-        if os.path.isfile('info.json'): 
-            self.data = json.loads(
+        else:
+            DATA = json.loads(
                 open('info.json','r').read()
             )
+            self.HasCreatedTable = True
+            self.IsUpdated = DATA['IsUpdated']
+            self.UpdatedTitles = DATA['UpdatedTitles']
+            self.RecentlyUpdateStatus = DATA['RecentlyUpdatedStatus']
+            self.LastOldInfo = DATA['LastOldInfo']
         
         if not os.path.isfile('n_i_p.json'):
-            self.NotesInPorts = {}
-        if os.path.isfile('n_i_p.json'):
-            self.NotesInPorts = json.loads(
-                open('n_i_p.json','r').read()
-            )
+            self.NoteId = 1
+            self.NoteTitles = []
     
-    def _CreatePortTable_(self):
-
-        self.db.execute('''
-        CREATE TABLE Ports (
-            PortId TEXT NOT NULL,
-            PortId_Name TEXT NOT NULL,
-            Notes_In_Port INTEGER PRIMARY KEY NOT NULL
-        );
-        ''')
-        self.db.commit()
-    
-    def _CHECK_NEW_PORT_DETAIL_(self, PORT_ID, PORT_ID_NAME):
-
-        if PORT_ID in self.PortIdList:
-            while PORT_ID in self.PortIdList:
-                print(f'\nPort {PORT_ID} already exists\n')
-                PORT_ID = input('Create A Port(random number that you will be able to remember) -> ')
-        if PORT_ID_NAME in self.PortIdNameList:
-            while PORT_ID_NAME in self.PortIdNameList:
-                print(f'\nPort Name {PORT_ID_NAME} already exists\n')
-                PORT_ID_NAME = input(f'Port {PORT_ID} Name -> ')
+    def CreateDbTable(self):
         
-        self.RecentPortId = PORT_ID
-        return PORT_ID, PORT_ID_NAME
+        if not self.HasCreatedTable:
+
+            self.db.execute('''
+                CREATE TABLE Notes (
+                    NoteId INT NOT NULL,
+                    NoteTitle TEXT NOT NULL,
+                    NoteDetails TEXT NOT NULL,
+                    Port_Connection TEXT NOTE NULL,
+                    UPDATE_DETAILS TEXT,
+                    DATE TEXT NOT NULL,
+                    UPDATE_DATE TEXT
+                );
+            ''')
+            self.PortDb._CreatePortTable_()
+
+            self.HasCreatedTable = True
+            DATA['DatabaseCreated'] = self.HasCreatedTable
+
+            with open('info.json','w') as file:
+                file.write(json.dumps(
+                    DATA,
+                    indent=2,
+                    sort_keys=False
+                ))
+            
+            self.PortDb._Update_Data_(DATA)
     
-    def _Port_Connection_(self):
+    def _StartupNotes_(self):
 
-        port = self.db.execute('SELECT PortId FROM Ports')
+        Menu()
 
-        for i in port:
-            if i[0] == self.PortIdList[len(self.PortIdList)-1]:
-                port = i[0]
-                break
-        return port
-    
-    def _INSERT_(self, info):
+        while self.run:
+            if not os.path.isfile('port_info.json'):
+                CREATE_PORT = input('Create A Port(random number that you will be able to remember) -> ')
+                PORT_NAME = input(f'Port {CREATE_PORT} Name -> ')
 
-        self.db.execute(f'{info}')
-        info = self.db.execute('SELECT PortId, PortId_Name FROM Ports')
-        
-        print('\nPORT CONNECTIONS:\n')
-        for i in info:
-            print(i)
-            self.PortIdList.append(i[0])
-            self.PortIdNameList.append(i[1])
-            self.NotesInPorts.update({i[1]:1,i[1]+'_':[]})
-        self.db.commit()
+                CREATE_PORT,PORT_NAME = self.PortDb._CHECK_NEW_PORT_DETAIL_(CREATE_PORT,PORT_NAME)
+                self.PortDb._INSERT_(f'''INSERT INTO Ports(PortId,PortId_Name,Notes_In_Port) VALUES ("{CREATE_PORT}","{PORT_NAME}",{self.NoteId})''')
+                self.PortDb._Connect_To_Port_(CREATE_PORT)
 
-        UpdateNotesInPorts(self.NotesInPorts)
-        UpdateJson(self.PortIdList,self.PortIdNameList)
-    
-    def _Update_Data_(self, DATA):
-        if self.data == {}: self.data = DATA
-    
-    def PrintPorts(self):
-        
-        print('Existing Ports: \n')
-        for i in self.PortIdList:
-            print(i)
-    
-    def _Connect_To_Port_(self, PortId): 
+                Menu()
+                self.PortIdName = self.PortDb.GatherPortName()
+            elif os.path.isfile('port_info.json'):
+                self.PortIdName = self.PortDb.GatherPortName()
 
-        if PortId in self.PortIdList:
-            ports = self.db.execute(f'SELECT PortId FROM Ports WHERE PortId="{PortId}"')
+                if self.PortIdName == '':
+                    self.PortDb.PrintPorts()
+                    Port_To_Connect_To = input('Port To Connect To -> ')
+                    self.PortDb._Connect_To_Port_(Port_To_Connect_To)
 
-            for i in ports:
+                    Menu()
+                    self.PortIdName = self.PortDb.GatherPortName()
+            
+            self.Port_Connection = self.PortDb._Port_Connection_()
+
+            if os.path.isfile('n_i_p.json'):
+                INFO = json.loads(
+                    open('n_i_p.json','r').read()
+                )
+                self.NoteId = INFO[self.PortIdName]
+                self.NoteTitles = INFO[self.PortIdName+'_']
+
+            if self.PortIdName != '':
+                print(f'\n"{self.PortIdName}"')
+            action = input('Action -> ')
+
+            if action.lower() == 'new':
+
+                self.NoteTitle = input(f'Title Of Note #{self.NoteId}: ')
+
+                if self.NoteTitle in self.NoteTitles:
+
+                    while self.NoteTitle in self.NoteTitles:
+                      print(f'\nError: NoteTitle {self.NoteTitle} is already taken..make a new one!\n')
+                      self.NoteTitle = input(f'Title Of Note #{self.NoteId}: ')
+
+                if not self.NoteTitle == "":
+                    self.NoteTitles.append(self.NoteTitle)
+                    self.NoteDetails = input(f'Deatails for Note #{self.NoteId}({self.NoteTitle}): ')
+
+                    if not self.NoteDetails == "":
+                        UpdateDatabase(self.db,f'''
+                        INSERT INTO Notes(NoteId,NoteTitle,NoteDetails,Port_Connection,UPDATE_DETAILS,DATE)
+                        VALUES({self.NoteId},"{self.NoteTitle}","{self.NoteDetails}","{self.PortDb._Port_Connection_()}","ORIGINAL","{self.TodaysDate}")
+                        ''')
+
+                        self.NoteId += 1
+                        self.PortDb.UpdateAmmountOfNotes(self.PortIdName,self.NoteId,self.NoteTitle)
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
+                    else:
+                        self.NoteTitles.remove(self.NoteTitle)
+                        print('NoteDetail was not assigned')
+                else:
+                    print('NoteTitle was not assigned')
+            if action.lower() == 'exit':
+                self.run = False
+                print("Successfully left project.\n")
+            if action.lower() == 'show':
+                #db_connect = sqlite3.connect('db.db')
+                info = self.db.execute(f'SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE, Port_Connection FROM Notes WHERE Port_Connection="{self.Port_Connection}"')
+
+                for r in info:
+                    #if r[5] == self.PortIdName:
+                    if r[1] in self.UpdatedTitles:
+                        if self.RecentlyUpdateStatus == 'Updated NoteTitle':
+                            print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m ({r[4]})\nOLD NoteTitle -> "{self.LastOldInfo}"\n')
+                        else:
+                            print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mUPDATED -> {self.RecentlyUpdateStatus}\033[0m ({r[4]})\n')
+
+                        self.IsUpdated = False
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
+
+                        if self.RecentlyUpdateStatus == 'Updated NoteDetails':
+                            print(f'\tOLD INFO -> {self.LastOldInfo}\n\tNEW INFO -> {r[2]}')
+                        else:
+                            print(f'\t{r[2]}')
+                    else:
+                        print(f'\nInformation for Note "{r[1]}"(#{r[0]}) \033[1mORIGINAL\033[0m ({r[4]})\n')
+                        print(f'\t{r[2]}')
+
+            if action.lower() == 'clr':
                 os.system('clear')
-                print(f'Connected To Port {i[0]}')
-                break
+                Menu()
+            if action.lower() == 'del':
+                PrintTitles(self.db,self.NoteTitles,self.Port_Connection)
 
-            self.RecentPortId = PortId
+                TITLE = input('NoteTitle to delete(all to delete all of notes): ')
+
+                if TITLE.lower() == 'all':
+                    titles = self.db.execute('SELECT NoteTitle FROM Notes')
+                    deleted = False
+
+                    #if len(self.NoteTitles)>0:
+                    for i in titles:
+                        self.db.execute(f'DELETE FROM Notes WHERE NoteTitle="{i[0]}"')
+                        self.db.commit()
+                        deleted = True
+                    else:
+                        if len(self.NoteTitles) < 1:
+                            print('No NoteTitle(s) to delete.')
+                    
+                    if deleted:
+                        # All go back to default
+                        self.PortDb.RemoveNotes(self.PortIdName,self.NoteTitles[0])
+                        self.NoteTitles = []
+                        self.NoteId = 1
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
+                        print('Successfully deleted \033[1mALL\033[0m notes')
+                if TITLE.isdigit():
+                    TITLE = self.NoteTitles[int(TITLE)-1]
+                if TITLE in self.NoteTitles:
+
+                    self.db.execute(f'DELETE FROM Notes WHERE NoteTitle="{TITLE}"')
+                    self.db.commit()
+
+                    self.NoteTitles.remove(f'{TITLE}')
+                    self.PortDb.RemoveNotes(self.PortIdName,TITLE)
+                    UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
+                    self.NoteId -= 1
+
+                    print(f'\033[0;36mSuccessfully deleted "{TITLE}"(#{self.NoteId})\033[0m')
+                else:
+                    print(f'"{TITLE}" doesn\'t exist')
+            if action.lower() == 'upd':
+
+                TO_UPD = input('\nWhat To Update(NoteTitle, NoteDetail): ')
+                
+                if TO_UPD.lower() == 'notedetail':
+                    titles=[]
+                    PrintTitles(self.db,titles,self.Port_Connection)
+
+                    TITLE_TO_UPDATE = input('NoteTitle to update: ')
+
+                    if TITLE_TO_UPDATE.isdigit():
+                        TITLE_TO_UPDATE = titles[int(TITLE_TO_UPDATE)-1]
+
+                    if TITLE_TO_UPDATE in self.NoteTitles[0]:
+                        NEW_DETAILS = input(f'New NoteDetails for "{TITLE_TO_UPDATE}": ')
+
+                        LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
+
+                        for i in LAST_UPDATE_DETAIL:
+                            LAST_UPDATE_DETAIL = " "+str(i[0])
+                            break
+                        
+                        LAST_INFORMATION = self.db.execute('SELECT NoteDetails FROM Notes')
+
+                        for i in LAST_INFORMATION:
+                            self.LastOldInfo = i[0]
+                            break
+
+                        self.db.execute(f'''
+                        UPDATE Notes
+                        SET NoteDetails="{NEW_DETAILS}"
+                        WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                        ''')
+
+                        if LAST_UPDATE_DETAIL != "Updated NoteDetail":
+                            if LAST_UPDATE_DETAIL == " ORIGINAL": LAST_UPDATE_DETAIL = "."
+                            self.RecentlyUpdateStatus = "Updated NoteDetails"
+                            self.db.execute(f'''
+                            UPDATE Notes
+                            SET UPDATE_DETAILS="Updated NoteDetail{LAST_UPDATE_DETAIL}"
+                            WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                            ''')
+                            self.db.execute(f'''
+                            UPDATE Notes
+                            SET UPDATE_DATE="Updated On {self.TodaysDate}"
+                            WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                            ''')
+                        self.db.commit()
+
+                        self.IsUpdated = True
+                        self.UpdatedTitles.append(TITLE_TO_UPDATE)
+
+                        UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
+
+                        print(f'Successfully updated "{TITLE_TO_UPDATE}"')
+                    else:
+                        print(f'"{TITLE_TO_UPDATE}" doesn\'t exist')
+                elif TO_UPD.lower() == 'notetitle':
+                    titles = []
+                    PrintTitles(self.db,titles,self.Port_Connection)
+
+                    TITLE_TO_UPDATE = input('NoteTitle to update: ')
+
+                    if TITLE_TO_UPDATE.isdigit():
+                        TITLE_TO_UPDATE = titles[int(TITLE_TO_UPDATE)-1]
+
+                    if TITLE_TO_UPDATE in self.NoteTitles[0]:
+                        NEW_TITLE_NAME = input(f'New NoteTitle Name For "{TITLE_TO_UPDATE}": ')
+
+                        if not NEW_TITLE_NAME == "":
+                            LAST_UPDATE_DETAIL = self.db.execute('SELECT UPDATE_DETAILS FROM Notes')
+
+                            LAST_INFORMATION = self.db.execute('SELECT NoteTitle FROM Notes')
+
+                            for i in LAST_INFORMATION:
+                                self.LastOldInfo = i[0]
+                                break
+
+                            for i in LAST_UPDATE_DETAIL:
+                                LAST_UPDATE_DETAIL = " "+i[0]
+                                break
+                            
+                            if LAST_UPDATE_DETAIL != "Updated NoteTitle":
+                                if LAST_UPDATE_DETAIL == " ORIGINAL": LAST_UPDATE_DETAIL = "."
+                                self.db.execute(f'''
+                                UPDATE Notes
+                                SET UPDATE_DETAILS="Updated NoteTitle{LAST_UPDATE_DETAIL}"
+                                WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                                ''')
+                                self.db.execute(f'''
+                                UPDATE Notes
+                                SET UPDATE_DATE="Updated On {self.TodaysDate}"
+                                WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                                ''')
+                                self.RecentlyUpdateStatus = "Updated NoteTitle"
+
+                            self.db.execute(f'''
+                            UPDATE Notes
+                            SET NoteTitle="{NEW_TITLE_NAME}"
+                            WHERE NoteTitle="{TITLE_TO_UPDATE}"
+                            ''')
+                            self.db.commit()
+
+                            self.NoteTitles.remove(TITLE_TO_UPDATE)
+                            self.NoteTitles.append(NEW_TITLE_NAME)
+                            self.IsUpdated = True
+                            self.UpdatedTitles.append(NEW_TITLE_NAME)
+
+                            self.PortDb.UpdateAmmountOfNotes(self.PortIdName,self.NoteId,self.NoteTitles)
+                            self.PortDb.RemoveNotes(self.PortIdName,TITLE_TO_UPDATE)
+                            UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
+
+                            print(f'Successfully updated NoteTitle of {TITLE_TO_UPDATE}')
+                        else:
+                            print(f'Cannot reassign NoteTitle to "". NoteTitle "{TITLE_TO_UPDATE}" remains the same')
+                    else:
+                        print(f'NoteTitle "{TITLE_TO_UPDATE}" doesn\'t exist')
+
+    def _FinishDatabase_(self):
+        ALL_INFO = self.db.execute(f'SELECT NoteId, NoteTitle, NoteDetails, UPDATE_DETAILS, DATE, UPDATE_DATE, Port_Connection FROM Notes WHERE Port_Connection="{self.Port_Connection}"')
+
+        print('------------------\nALL INFORMATION STORED\n')
+        for i in ALL_INFO:
+            if i[5] == None:
+                a = list(i)
+                a[5] = 'No Updates'
+                i = tuple(a)
+            print(i)
         else:
-            print(f'{PortId} port connection does not exist. Creating...')
-            sleep(2)
-            PORT_NAME = input(f'\nPort {PortId} name -> ')
-            self.db.execute(f'INSERT INTO Ports(PortId,PortId_Name) VALUES("{PortId}","{PORT_NAME}")')
-            self.db.commit()
+            if len(self.NoteTitles) < 1:
+                print('No information stored(must\'ve been deleted!)')
 
-            self.PortIdList.append(PortId)
-            self.PortIdNameList.append(PORT_NAME)
-            UpdateJson(self.PortIdList,self.PortIdNameList)
-
-            self.RecentPortId = PortId
-
-            self.NotesInPorts.update({PORT_NAME:1,PORT_NAME+'_':[]})
-            UpdateNotesInPorts(self.NotesInPorts)
-
-            return self.RecentPortId
-    
-    def GatherPortName(self):
-        
-        if self.RecentPortId != '':
-            port_name = self.db.execute(f'SELECT PortId_Name FROM Ports WHERE PortId="{self.RecentPortId}"')
-
-            for i in port_name:
-                port_name = i[0]
-                break
-
-            return port_name
-        else: return ''
-    
-    def UpdateAmmountOfNotes(self, port_name, ammount_of_notes, note_title):
-
-        if port_name == self.PortIdNameList[len(self.PortIdNameList)-1]:
-            self.NotesInPorts[port_name] = ammount_of_notes
-            self.NotesInPorts[port_name+'_'].append(note_title)
-
-            UpdateNotesInPorts(self.NotesInPorts)
-    
-    def RemoveNotes(self, port_name, notes_to_delete):
-
-        if port_name == self.PortIdNameList[len(self.PortIdNameList)-1]:
-            self.NotesInPorts[port_name+'_'].remove(notes_to_delete)
-            self.NotesInPorts[port_name] -= 1
-
-            UpdateNotesInPorts(self.NotesInPorts)
-
-    
-    def FinishPortDb(self, destroy=False):
-
-        if destroy:
-            self.db.execute(f'DELETE FROM Ports WHERE PortId="{self.RecentPortId}"')
-            self.db.commit()
-        
         self.db.close()
+        self.PortDb.FinishPortDb()
