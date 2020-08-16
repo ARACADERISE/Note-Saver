@@ -159,15 +159,21 @@ class Port:
             return port_name
         else: return ''
     
-    def UpdateAmmountOfNotes(self, port_name, ammount_of_notes, note_titles, is_deleted = False, item_to_delete=''):
+    def UpdateAmmountOfNotes(self, port_name, ammount_of_notes, note_title):
 
-        self.NotesInPorts[port_name] = ammount_of_notes
-        self.NotesInPorts[port_name+'_'].append(note_titles)
+        if port_name == self.PortIdNameList[len(self.PortIdNameList)-1]:
+            self.NotesInPorts[port_name] = ammount_of_notes
+            self.NotesInPorts[port_name+'_'].append(note_title)
 
-        if is_deleted:
-            self.NotesInPorts[port_name+'_'].remove(item_to_delete)
+            UpdateNotesInPorts(self.NotesInPorts)
+    
+    def RemoveNotes(self, port_name, notes_to_delete):
 
-        UpdateNotesInPorts(self.NotesInPorts)
+        if port_name == self.PortIdNameList[len(self.PortIdNameList)-1]:
+            self.NotesInPorts[port_name+'_'].remove(notes_to_delete)
+
+            UpdateNotesInPorts(self.NotesInPorts)
+
     
     def FinishPortDb(self, destroy=False):
 
