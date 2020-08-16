@@ -350,7 +350,7 @@ class Database:
                             self.IsUpdated = True
                             self.UpdatedTitles.append(NEW_TITLE_NAME)
 
-                            self.PortDb.UpdateAmmountOfNotes(self.PortIdName,self.NoteId,self.NoteTitles)
+                            self.PortDb.UpdateAmmountOfNotes(self.PortIdName,self.NoteId,self.NoteTitles[0])
                             self.PortDb.RemoveNotes(self.PortIdName,TITLE_TO_UPDATE)
                             UpdateJSON(self.NoteId,self.NoteTitles,self.IsUpdated,self.UpdatedTitles,self.RecentlyUpdateStatus,self.LastOldInfo)
 
