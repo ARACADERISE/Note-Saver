@@ -171,6 +171,7 @@ class Port:
 
         if port_name == self.PortIdNameList[len(self.PortIdNameList)-1]:
             self.NotesInPorts[port_name+'_'].remove(notes_to_delete)
+            self.NotesInPorts[port_name] -= 1
 
             UpdateNotesInPorts(self.NotesInPorts)
 
